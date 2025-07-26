@@ -6,6 +6,7 @@ use sqlx::{SqlitePool, migrate::Migrator, sqlite::SqlitePoolOptions};
 use crate::handlers::{auth, homepage};
 
 pub mod handlers;
+pub mod models;
 
 static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
