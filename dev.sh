@@ -3,6 +3,8 @@ if [ ! -f .env ]; then
     echo ".env not found. Generating..."
     cat > .env <<EOF
 DATABASE_URL="sqlite://database.db"
+GOOGLE_CLIENT_ID="ADD_YOUR_CLIENT_ID"
+GOOGLE_CLIENT_SECRET="ADD_YOUR_SECRET"
 EOF
     echo ".env generated."
 else

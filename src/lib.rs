@@ -3,7 +3,7 @@ use std::{env, sync::Arc};
 use axum::Router;
 use sqlx::{SqlitePool, migrate::Migrator, sqlite::SqlitePoolOptions};
 
-use crate::handlers::homepage;
+use crate::handlers::{auth, homepage};
 
 pub mod handlers;
 
@@ -51,5 +51,8 @@ async fn initialize_app() -> Router {
 
     let state = Arc::new(AppState { db, app_details });
 
-    Router::new().merge(homepage::routes()).with_state(state)
+    Router::new()
+        .merge(homepage::routes())
+        .merge(auth::routes())
+        .with_state(state)
 }
