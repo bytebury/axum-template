@@ -10,6 +10,8 @@ We offer some opinionated set up with `axum-template` including the following "t
 * SQLX
 * Docker
 * Askama (for templates)
+* OAuth
+  * Google
 
 ## Getting Started
 To get started, you'll need to have Rust installed. Simply clone the repo and we've included
@@ -30,3 +32,12 @@ Once you run the script, you can go to `http://localhost:8080` in your browser t
 If you are looking to customize the template, e.g. change the name from "Axum Template" to something reasonable, you can do that in the code itself.
 
 Application Details are all configured in the `lib.rs#initialize_app` function. You may change them to your liking.
+
+## Deploying
+If you have a server, you can deploy using:
+
+```shell
+./deploy.sh
+```
+
+With that in mind, you can also use similar steps from that script to get to work on setting up your own pipelines for CI/CD.
