@@ -5,6 +5,7 @@ CREATE TABLE users (
     first_name TEXT NOT NULL,
     last_name TEXT DEFAULT "",
     full_name TEXT NOT NULL,
+    picture_url TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
