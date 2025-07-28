@@ -10,7 +10,10 @@ use std::sync::Arc;
 
 use crate::{
     AppState,
-    infrastructure::auth::{GoogleUserInfo, google_authorize_url, google_exchange_code_for_user},
+    infrastructure::auth::{
+        OAuth,
+        google::{GoogleOAuth, GoogleUserInfo},
+    },
 };
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -26,11 +29,13 @@ struct AuthRequest {
 }
 
 async fn signin_with_google() -> impl IntoResponse {
-    Redirect::to(google_authorize_url().await.as_str())
+    Redirect::to(GoogleOAuth::new().auth_url().as_str())
 }
 
 async fn google_callback(Query(params): Query<AuthRequest>) -> impl IntoResponse {
-    let access_token = google_exchange_code_for_user(&params.code).await;
+    let access_token = GoogleOAuth::new()
+        .exchange_code_for_access_token(&params.code)
+        .await;
 
     // TODO: generate a JWT with this information
     //       create the user if they do not exist
