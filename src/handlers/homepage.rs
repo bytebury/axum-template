@@ -15,6 +15,7 @@ pub fn routes() -> Router<Arc<AppState>> {
 struct HomepageTemplate {
     current_user: Option<User>,
     app_display_name: String,
+    version: String,
 }
 
 async fn homepage(
@@ -23,6 +24,7 @@ async fn homepage(
 ) -> HomepageTemplate {
     HomepageTemplate {
         app_display_name: state.app_details.display_name.to_string(),
+        version: state.app_details.version.to_string(),
         current_user,
     }
 }

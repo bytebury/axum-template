@@ -20,6 +20,7 @@ pub mod models;
 pub struct AppDetails {
     pub name: String,
     pub display_name: String,
+    pub version: String,
 }
 
 #[derive(Clone)]
@@ -42,6 +43,7 @@ async fn initialize_app() -> Router {
     let app_details = AppDetails {
         name: "axum-template".to_string(),
         display_name: "Axum Template".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
     };
 
     let state = Arc::new(AppState {
