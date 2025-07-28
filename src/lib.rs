@@ -7,6 +7,7 @@ use crate::{
     infrastructure::database::Database,
 };
 
+pub mod extractors;
 pub mod handlers;
 pub mod infrastructure;
 pub mod models;
@@ -21,6 +22,7 @@ pub struct AppDetails {
 pub struct AppState {
     pub app_details: AppDetails,
     pub db: SqlitePool,
+    pub is_dev_mode: bool,
 }
 
 pub async fn start() {
@@ -31,12 +33,18 @@ pub async fn start() {
 }
 
 async fn initialize_app() -> Router {
+    let db = Database::initialize().await;
+    let is_dev_mode = cfg!(debug_assertions);
     let app_details = AppDetails {
         name: "axum-template".to_string(),
         display_name: "Axum Template".to_string(),
     };
-    let db = Database::initialize().await;
-    let state = Arc::new(AppState { db, app_details });
+
+    let state = Arc::new(AppState {
+        db,
+        app_details,
+        is_dev_mode,
+    });
 
     Router::new()
         .merge(homepage::routes())

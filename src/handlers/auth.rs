@@ -1,8 +1,12 @@
 use axum::{
-    Json, Router,
+    Router,
     extract::{Query, State},
     response::{Html, IntoResponse, Redirect},
     routing::{delete, get},
+};
+use axum_extra::extract::{
+    CookieJar,
+    cookie::{self, Cookie},
 };
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -10,7 +14,10 @@ use std::sync::Arc;
 
 use crate::{
     AppState,
-    infrastructure::auth::{OAuth, google::GoogleOAuth},
+    infrastructure::{
+        auth::{OAuth, google::GoogleOAuth},
+        jwt::{JwtService, user_claims::UserClaims},
+    },
     models::user::User,
 };
 
@@ -33,26 +40,36 @@ async fn signin_with_google() -> impl IntoResponse {
 async fn google_callback(
     State(state): State<Arc<AppState>>,
     Query(params): Query<AuthRequest>,
+    cookies: CookieJar,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let oauth = GoogleOAuth::new();
-    let user = oauth.exchange_code_for_user(&params.code).await?;
+    let user = GoogleOAuth::new()
+        .exchange_code_for_user(&params.code)
+        .await?;
 
-    // TODO: When we get the user, we need to generate the JWT
-    //       and then redirect them where they need to go.
+    let user = match User::find_by_email(&user.email, &state.db).await {
+        Ok(Some(user)) => user,
+        Ok(None) => user
+            .create(&state.db)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
 
-    match User::find_by_email(&user.email, &state.db).await {
-        Ok(Some(existing_user)) => Ok(Json(existing_user)),
-        Ok(None) => {
-            let inserted_user = user
-                .create(&state.db)
-                .await
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-            Ok(Json(inserted_user))
-        }
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
-    }
+    let token = JwtService::generate(&UserClaims::from(user))
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let auth_cookie = Cookie::build(("auth_token", token))
+        .path("/")
+        .http_only(true)
+        .same_site(cookie::SameSite::Strict)
+        .secure(state.is_dev_mode);
+
+    let cookies = cookies.add(auth_cookie);
+
+    Ok((cookies, Html("<script>window.location = '/'</script>")))
 }
 
-async fn signout() -> impl IntoResponse {
-    Html("TODO -- SIGN A USER OUT")
+async fn signout(cookies: CookieJar) -> impl IntoResponse {
+    let jar = cookies.remove(Cookie::from("auth_token"));
+    (jar, Redirect::to("/"))
 }
