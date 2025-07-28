@@ -87,7 +87,6 @@ impl OAuth for GoogleOAuth {
         return authorize_url.as_str().to_string();
     }
 
-    // TODO: this needs to return a Result so that we can smoothly handle errors
     async fn exchange_code_for_user(&self, code: &str) -> Result<User, StatusCode> {
         let http_client = oauth2::reqwest::ClientBuilder::new()
             .redirect(oauth2::reqwest::redirect::Policy::none())
