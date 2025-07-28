@@ -4,13 +4,13 @@ use oauth2::{
     AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EndpointNotSet, EndpointSet,
     RedirectUrl, RevocationUrl, Scope, TokenResponse, TokenUrl, basic::BasicClient,
 };
-use reqwest::StatusCode;
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 
-use crate::infrastructure::auth::OAuth;
+use crate::{infrastructure::auth::OAuth, models::user::User};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GoogleUserInfo {
+pub struct GoogleUser {
     pub sub: String,
     pub email: String,
     pub email_verified: bool,
@@ -56,6 +56,20 @@ impl GoogleOAuth {
             .set_redirect_uri(redirect_url)
             .set_revocation_url(revocation_url)
     }
+
+    async fn fetch_google_user_info(&self, token: &str) -> Result<GoogleUser, reqwest::Error> {
+        let client = Client::new();
+        let google_user = client
+            .get("https://www.googleapis.com/oauth2/v3/userinfo")
+            .bearer_auth(token)
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<GoogleUser>()
+            .await?;
+
+        Ok(google_user)
+    }
 }
 
 impl OAuth for GoogleOAuth {
@@ -73,7 +87,8 @@ impl OAuth for GoogleOAuth {
         return authorize_url.as_str().to_string();
     }
 
-    async fn exchange_code_for_access_token(&self, code: &str) -> String {
+    // TODO: this needs to return a Result so that we can smoothly handle errors
+    async fn exchange_code_for_user(&self, code: &str) -> Option<User> {
         let http_client = oauth2::reqwest::ClientBuilder::new()
             .redirect(oauth2::reqwest::redirect::Policy::none())
             .build()
@@ -84,11 +99,15 @@ impl OAuth for GoogleOAuth {
             .request_async(&http_client)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR);
-
-        token_result
+        let access_token = token_result
             .expect("Access token should be available")
             .access_token()
             .secret()
-            .clone()
+            .clone();
+
+        if let Ok(google_user) = self.fetch_google_user_info(&access_token).await {
+            return Some(google_user.into());
+        }
+        return None;
     }
 }

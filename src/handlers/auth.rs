@@ -4,16 +4,12 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     routing::{delete, get},
 };
-use reqwest::Client;
 use serde::Deserialize;
 use std::sync::Arc;
 
 use crate::{
     AppState,
-    infrastructure::auth::{
-        OAuth,
-        google::{GoogleOAuth, GoogleUserInfo},
-    },
+    infrastructure::auth::{OAuth, google::GoogleOAuth},
 };
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -33,32 +29,18 @@ async fn signin_with_google() -> impl IntoResponse {
 }
 
 async fn google_callback(Query(params): Query<AuthRequest>) -> impl IntoResponse {
-    let access_token = GoogleOAuth::new()
-        .exchange_code_for_access_token(&params.code)
-        .await;
+    let oauth = GoogleOAuth::new();
+    let user = oauth.exchange_code_for_user(&params.code).await;
 
     // TODO: generate a JWT with this information
-    //       create the user if they do not exist
+    //       create the user if they do not exist (via e-mail)
     //       set the auth_token with the JWT to sign them in.
+    //       redirect them to the appropriate place
 
-    match fetch_google_user_info(&access_token).await {
-        Ok(user) => Json(user).into_response(),
-        Err(_) => Html("Something went wrong".to_string()).into_response(),
+    match user {
+        Some(user) => Json(user).into_response(),
+        None => Html("Something went wrong".to_string()).into_response(),
     }
-}
-
-async fn fetch_google_user_info(token: &str) -> Result<GoogleUserInfo, reqwest::Error> {
-    let client = Client::new();
-    let res = client
-        .get("https://www.googleapis.com/oauth2/v3/userinfo")
-        .bearer_auth(token)
-        .send()
-        .await?
-        .error_for_status()?
-        .json::<GoogleUserInfo>()
-        .await?;
-
-    Ok(res)
 }
 
 async fn signout() -> impl IntoResponse {
