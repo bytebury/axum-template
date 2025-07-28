@@ -105,6 +105,6 @@ impl OAuth for GoogleOAuth {
             .await
             .map_err(|_| StatusCode::BAD_GATEWAY)?;
 
-        Ok(google_user.into())
+        Ok(User::from(google_user))
     }
 }
