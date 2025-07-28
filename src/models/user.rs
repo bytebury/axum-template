@@ -19,10 +19,10 @@ impl User {
     pub async fn find_by_email(
         email: &str,
         executor: &sqlx::SqlitePool,
-    ) -> Result<Self, sqlx::Error> {
+    ) -> Result<Option<Self>, sqlx::Error> {
         sqlx::query_as(r#"SELECT * FROM users WHERE email = ?"#)
             .bind(email)
-            .fetch_one(executor)
+            .fetch_optional(executor)
             .await
     }
 

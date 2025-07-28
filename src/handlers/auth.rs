@@ -40,16 +40,17 @@ async fn google_callback(
     // TODO: When we get the user, we need to generate the JWT
     //       and then redirect them where they need to go.
 
-    if let Ok(user) = User::find_by_email(&user.email, &state.db).await {
-        return Ok(Json(user));
+    match User::find_by_email(&user.email, &state.db).await {
+        Ok(Some(existing_user)) => Ok(Json(existing_user)),
+        Ok(None) => {
+            let inserted_user = user
+                .create(&state.db)
+                .await
+                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+            Ok(Json(inserted_user))
+        }
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
-
-    let inserted_user = user
-        .create(&state.db)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    Ok(Json(inserted_user))
 }
 
 async fn signout() -> impl IntoResponse {
