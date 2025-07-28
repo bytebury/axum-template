@@ -88,26 +88,24 @@ impl OAuth for GoogleOAuth {
     }
 
     // TODO: this needs to return a Result so that we can smoothly handle errors
-    async fn exchange_code_for_user(&self, code: &str) -> Option<User> {
+    async fn exchange_code_for_user(&self, code: &str) -> Result<User, StatusCode> {
         let http_client = oauth2::reqwest::ClientBuilder::new()
             .redirect(oauth2::reqwest::redirect::Policy::none())
             .build()
-            .expect("Client should build");
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         let token_result = self
             .client()
             .exchange_code(AuthorizationCode::new(code.to_string()))
             .request_async(&http_client)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR);
-        let access_token = token_result
-            .expect("Access token should be available")
-            .access_token()
-            .secret()
-            .clone();
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        let access_token = token_result.access_token().secret().clone();
 
-        if let Ok(google_user) = self.fetch_google_user_info(&access_token).await {
-            return Some(google_user.into());
-        }
-        return None;
+        let google_user = self
+            .fetch_google_user_info(&access_token)
+            .await
+            .map_err(|_| StatusCode::BAD_GATEWAY)?;
+
+        Ok(google_user.into())
     }
 }

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::infrastructure::auth::google::GoogleUser;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: i64,
     pub email: String,
@@ -13,6 +13,38 @@ pub struct User {
     pub picture_url: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+}
+
+impl User {
+    pub async fn find_by_email(
+        email: &str,
+        executor: &sqlx::SqlitePool,
+    ) -> Result<Self, sqlx::Error> {
+        sqlx::query_as(r#"SELECT * FROM users WHERE email = ?"#)
+            .bind(email)
+            .fetch_one(executor)
+            .await
+    }
+
+    pub async fn create(&self, executor: &sqlx::SqlitePool) -> Result<Self, sqlx::Error> {
+        let inserted_user: User = sqlx::query_as(
+            r#"
+            INSERT INTO users (email, verified, full_name, first_name, last_name, picture_url)
+            VALUES (?, ?, ?, ?, ?, ?)
+            RETURNING * 
+        "#,
+        )
+        .bind(&self.email)
+        .bind(&self.verified)
+        .bind(&self.full_name)
+        .bind(&self.first_name)
+        .bind(&self.last_name)
+        .bind(&self.picture_url)
+        .fetch_one(executor)
+        .await?;
+
+        Ok(inserted_user)
+    }
 }
 
 impl From<GoogleUser> for User {
