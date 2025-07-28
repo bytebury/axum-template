@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::infrastructure::auth::OAuth;
 
-pub struct GoogleOAuth {}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GoogleUserInfo {
     pub sub: String,
@@ -22,6 +20,8 @@ pub struct GoogleUserInfo {
     pub family_name: Option<String>,
     pub locale: Option<String>,
 }
+
+pub struct GoogleOAuth {}
 
 impl GoogleOAuth {
     pub fn new() -> Self {
