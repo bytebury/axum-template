@@ -3,9 +3,7 @@ use std::env;
 use jsonwebtoken::{
     Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation, decode, encode,
 };
-use serde::Serialize;
-
-use crate::infrastructure::jwt::user_claims::UserClaims;
+use serde::{Serialize, de::DeserializeOwned};
 
 pub mod user_claims;
 
@@ -24,8 +22,10 @@ impl JwtService {
         )
     }
 
-    pub fn verify(token: &str) -> Result<TokenData<UserClaims>, jsonwebtoken::errors::Error> {
-        decode::<UserClaims>(
+    pub fn verify<T: DeserializeOwned>(
+        token: &str,
+    ) -> Result<TokenData<T>, jsonwebtoken::errors::Error> {
+        decode::<T>(
             token,
             &DecodingKey::from_secret(
                 env::var("JWT_SECRET")

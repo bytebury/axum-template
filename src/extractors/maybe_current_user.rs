@@ -7,7 +7,11 @@ use axum::{
 use axum_extra::extract::CookieJar;
 use reqwest::StatusCode;
 
-use crate::{AppState, infrastructure::jwt::JwtService, models::user::User};
+use crate::{
+    AppState,
+    infrastructure::jwt::{JwtService, user_claims::UserClaims},
+    models::user::User,
+};
 
 pub struct MaybeCurrentUser(pub Option<User>);
 
@@ -26,7 +30,7 @@ impl FromRequestParts<Arc<AppState>> for MaybeCurrentUser {
             None => return Ok(MaybeCurrentUser(None)),
         };
 
-        let token_data = match JwtService::verify(token) {
+        let token_data = match JwtService::verify::<UserClaims>(token) {
             Ok(claims) => claims,
             Err(_) => return Ok(MaybeCurrentUser(None)),
         };
