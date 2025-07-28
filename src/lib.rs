@@ -1,6 +1,10 @@
-use axum::Router;
+use axum::{
+    Router,
+    http::{HeaderValue, header::CACHE_CONTROL},
+};
 use sqlx::SqlitePool;
 use std::sync::Arc;
+use tower_http::{services::ServeDir, set_header::SetResponseHeaderLayer};
 
 use crate::{
     handlers::{auth, homepage},
@@ -46,7 +50,15 @@ async fn initialize_app() -> Router {
         is_dev_mode,
     });
 
+    let serve_static = Router::new()
+        .nest_service("/assets", ServeDir::new("public"))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CACHE_CONTROL,
+            HeaderValue::from_static("public, max-age=31536000"),
+        ));
+
     Router::new()
+        .merge(serve_static)
         .merge(homepage::routes())
         .merge(auth::routes())
         .with_state(state)

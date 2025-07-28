@@ -62,14 +62,20 @@ async fn google_callback(
         .path("/")
         .http_only(true)
         .same_site(cookie::SameSite::Strict)
-        .secure(state.is_dev_mode);
+        .secure(!state.is_dev_mode);
 
     let cookies = cookies.add(auth_cookie);
 
     Ok((cookies, Html("<script>window.location = '/'</script>")))
 }
 
-async fn signout(cookies: CookieJar) -> impl IntoResponse {
-    let jar = cookies.remove(Cookie::from("auth_token"));
-    (jar, Redirect::to("/"))
+async fn signout(State(state): State<Arc<AppState>>, cookies: CookieJar) -> impl IntoResponse {
+    let cookies = cookies.remove(
+        Cookie::build(("auth_token", ""))
+            .path("/")
+            .secure(!state.is_dev_mode)
+            .http_only(true)
+            .same_site(cookie::SameSite::Strict),
+    );
+    (cookies, Html("<script>window.location = '/'</script>"))
 }
