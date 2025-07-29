@@ -4,7 +4,9 @@ use askama::Template;
 use askama_web::WebTemplate;
 use axum::{Router, extract::State, routing::get};
 
-use crate::{AppState, extractors::maybe_current_user::MaybeCurrentUser, models::user::User};
+use crate::{
+    AppState, extractors::maybe_current_user::MaybeCurrentUser, handlers::SharedTemplateContext,
+};
 
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new().route("/", get(homepage))
@@ -13,9 +15,7 @@ pub fn routes() -> Router<Arc<AppState>> {
 #[derive(Template, WebTemplate)]
 #[template(path = "index.html")]
 struct HomepageTemplate {
-    current_user: Option<User>,
-    app_display_name: String,
-    version: String,
+    shared: SharedTemplateContext,
 }
 
 async fn homepage(
@@ -23,8 +23,6 @@ async fn homepage(
     MaybeCurrentUser(current_user): MaybeCurrentUser,
 ) -> HomepageTemplate {
     HomepageTemplate {
-        app_display_name: state.app_details.display_name.to_string(),
-        version: state.app_details.version.to_string(),
-        current_user,
+        shared: SharedTemplateContext::new(&state, current_user),
     }
 }

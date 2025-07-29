@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::infrastructure::auth::google::GoogleUser;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct User {
     pub id: i64,
     pub email: String,
