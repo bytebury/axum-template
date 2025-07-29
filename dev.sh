@@ -1,3 +1,5 @@
+npm i
+
 # Check for the .env file; otherwise create one
 if [ ! -f .env ]; then
     echo ".env not found. Generating..."
@@ -22,5 +24,5 @@ else
 fi
 
 
-# Run cargo in watch mode
-cargo watch -x run
+# Run cargo and TailwindCSS in watch mode
+npx concurrently "cargo watch -x run" "npx tailwindcss -i './public/styles/tailwind.css' -o './public/styles/main.css' --watch"
