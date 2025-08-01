@@ -34,7 +34,7 @@ struct AuthRequest {
 }
 
 async fn signin_with_google() -> impl IntoResponse {
-    Redirect::to(GoogleOAuth::new().auth_url().as_str())
+    Redirect::to(GoogleOAuth::default().auth_url().as_str())
 }
 
 async fn google_callback(
@@ -42,7 +42,7 @@ async fn google_callback(
     Query(params): Query<AuthRequest>,
     cookies: CookieJar,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let user = GoogleOAuth::new()
+    let user = GoogleOAuth::default()
         .exchange_code_for_user(&params.code)
         .await?;
 

@@ -72,6 +72,12 @@ impl GoogleOAuth {
     }
 }
 
+impl Default for GoogleOAuth {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OAuth for GoogleOAuth {
     fn auth_url(&self) -> String {
         let (authorize_url, _csrf_state) = self
@@ -84,7 +90,7 @@ impl OAuth for GoogleOAuth {
                 "https://www.googleapis.com/auth/userinfo.profile".to_string(),
             ))
             .url();
-        return authorize_url.as_str().to_string();
+        authorize_url.as_str().to_string()
     }
 
     async fn exchange_code_for_user(&self, code: &str) -> Result<User, StatusCode> {

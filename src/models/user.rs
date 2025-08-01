@@ -35,7 +35,7 @@ impl User {
         "#,
         )
         .bind(&self.email)
-        .bind(&self.verified)
+        .bind(self.verified)
         .bind(&self.full_name)
         .bind(&self.first_name)
         .bind(&self.last_name)
