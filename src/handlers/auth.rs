@@ -18,7 +18,7 @@ use crate::{
         auth::{OAuth, google::GoogleOAuth},
         jwt::{JwtService, user_claims::UserClaims},
     },
-    models::user::User,
+    repositories::user_repository::UserRepository,
 };
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -42,14 +42,15 @@ async fn google_callback(
     Query(params): Query<AuthRequest>,
     cookies: CookieJar,
 ) -> Result<impl IntoResponse, StatusCode> {
+    let user_repository = UserRepository::new(&state.db);
     let user = GoogleOAuth::default()
         .exchange_code_for_user(&params.code)
         .await?;
 
-    let user = match User::find_by_email(&user.email, &state.db).await {
+    let user = match user_repository.find_by_email(&user.email).await {
         Ok(Some(user)) => user,
-        Ok(None) => user
-            .create(&state.db)
+        Ok(None) => user_repository
+            .create(user)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),

@@ -15,6 +15,7 @@ pub mod extractors;
 pub mod handlers;
 pub mod infrastructure;
 pub mod models;
+pub mod repositories;
 
 #[derive(Clone)]
 pub struct AppDetails {

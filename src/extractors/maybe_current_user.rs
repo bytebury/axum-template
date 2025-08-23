@@ -11,6 +11,7 @@ use crate::{
     AppState,
     infrastructure::jwt::{JwtService, user_claims::UserClaims},
     models::user::User,
+    repositories::user_repository::UserRepository,
 };
 
 pub struct MaybeCurrentUser(pub Option<User>);
@@ -35,7 +36,11 @@ impl FromRequestParts<Arc<AppState>> for MaybeCurrentUser {
             Err(_) => return Ok(MaybeCurrentUser(None)),
         };
 
-        let user = match User::find_by_email(&token_data.claims.email, &state.db).await {
+        let user_repository = UserRepository::new(&state.db);
+        let user = match user_repository
+            .find_by_email(&token_data.claims.email)
+            .await
+        {
             Ok(Some(user)) => Some(user),
             _ => None,
         };
