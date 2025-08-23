@@ -1,6 +1,6 @@
 use sqlx::query_as;
 
-use crate::models::user::User;
+use crate::{models::user::User, repositories::Repository};
 
 pub struct UserRepository {
     db: sqlx::SqlitePool,
@@ -36,5 +36,11 @@ impl UserRepository {
         .await?;
 
         Ok(inserted_user)
+    }
+}
+
+impl Repository<User> for UserRepository {
+    fn pool(&self) -> &sqlx::SqlitePool {
+        &self.db
     }
 }

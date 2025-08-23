@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::infrastructure::auth::google::GoogleUser;
+use crate::{infrastructure::auth::google::GoogleUser, models::Entity};
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct User {
@@ -31,4 +31,9 @@ impl From<GoogleUser> for User {
             updated_at: "".to_string(),
         }
     }
+}
+
+#[async_trait::async_trait]
+impl Entity for User {
+    const TABLE: &'static str = "users";
 }
