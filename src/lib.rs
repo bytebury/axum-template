@@ -41,7 +41,12 @@ pub async fn start() {
         .await
         .unwrap();
 
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }
 
 async fn initialize_app() -> Router {

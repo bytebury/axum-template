@@ -2,7 +2,12 @@ use std::{env, sync::Arc};
 
 use askama::Template;
 use askama_web::WebTemplate;
-use axum::{Router, extract::State, response::Redirect, routing::get};
+use axum::{
+    Router,
+    extract::{ConnectInfo, State},
+    response::Redirect,
+    routing::get,
+};
 
 use crate::{
     AppState,
@@ -27,11 +32,14 @@ struct HomepageTemplate {
 
 async fn homepage(
     State(state): State<Arc<AppState>>,
+    ConnectInfo(addr): ConnectInfo<std::net::SocketAddr>,
     MaybeCurrentUser(current_user): MaybeCurrentUser,
 ) -> HomepageTemplate {
     HomepageTemplate {
         shared: SharedTemplateContext::new(&state, current_user),
-        country: ip_address::get_country_details().unwrap(),
+        country: ip_address::get_country_details(addr.ip())
+            .unwrap()
+            .unwrap_or_default(),
     }
 }
 
