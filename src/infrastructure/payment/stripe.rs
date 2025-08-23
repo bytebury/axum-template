@@ -57,14 +57,12 @@ impl Stripe {
 
         let customer_id = customer.id.to_string();
 
-        sqlx::query!(
-            r#"UPDATE users SET stripe_customer_id = ? WHERE id = ?"#,
-            customer_id,
-            user.id
-        )
-        .execute(&self.db)
-        .await
-        .map_err(|e| e.to_string())?;
+        sqlx::query(r#"UPDATE users SET stripe_customer_id = ? WHERE id = ?"#)
+            .bind(customer_id)
+            .bind(user.id)
+            .execute(&self.db)
+            .await
+            .map_err(|e| e.to_string())?;
 
         Ok(customer.id)
     }
