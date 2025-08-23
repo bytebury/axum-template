@@ -13,6 +13,7 @@ pub struct User {
     pub picture_url: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub stripe_customer_id: Option<String>,
 }
 
 impl User {
@@ -57,6 +58,7 @@ impl From<GoogleUser> for User {
             last_name: google_user.family_name,
             full_name: google_user.name,
             picture_url: google_user.picture,
+            stripe_customer_id: None,
             created_at: "".to_string(),
             updated_at: "".to_string(),
         }

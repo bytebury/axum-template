@@ -13,6 +13,7 @@
 <body>
     {% if let Some(user) = shared.current_user %}
     <h1>Welcome {{ user.first_name }}</h1>
+    <a href="/buy-subscription">Purchase</a>
     <button hx-delete="/auth/signout">Sign out</button>
     {% else %}
     <h1>Welcome to {{ shared.app_display_name }}</h1>

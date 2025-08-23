@@ -20,6 +20,7 @@ We offer some opinionated set up with `axum-template` including the following "t
 - SQLite
 - SQLX
 - Docker
+- Stripe (for payments)
 - Askama (for templates)
 - OAuth
   - Google

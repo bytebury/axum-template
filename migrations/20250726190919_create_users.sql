@@ -6,6 +6,7 @@ CREATE TABLE users (
     last_name TEXT DEFAULT "",
     full_name TEXT NOT NULL,
     picture_url TEXT,
+    stripe_customer_id TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
