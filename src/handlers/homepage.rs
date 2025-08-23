@@ -12,6 +12,7 @@ pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(homepage))
         .route("/buy-subscription", get(buy_subscription))
+        .route("/manage-subscription", get(manage_subscriptions))
 }
 
 #[derive(Template, WebTemplate)]
@@ -51,4 +52,22 @@ async fn buy_subscription(
     ))?;
 
     Ok(Redirect::to(&url))
+}
+
+async fn manage_subscriptions(
+    State(state): State<Arc<AppState>>,
+    MaybeCurrentUser(current_user): MaybeCurrentUser,
+) -> Result<Redirect, (axum::http::StatusCode, String)> {
+    let user = match current_user {
+        Some(u) => u,
+        None => return Ok(Redirect::to("/")),
+    };
+
+    let session = state
+        .stripe
+        .manage_subscription(&user)
+        .await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Redirect::to(&session.url))
 }

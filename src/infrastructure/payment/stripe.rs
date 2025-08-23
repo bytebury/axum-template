@@ -1,8 +1,10 @@
 use std::{collections, env, str::FromStr};
 
+use sqlx::SqlitePool;
 use stripe::{
-    CheckoutSession, CheckoutSessionBillingAddressCollection, CheckoutSessionMode,
-    CreateCheckoutSession, CreateCheckoutSessionAutomaticTax, CreateCheckoutSessionCustomerUpdate,
+    BillingPortalSession, CheckoutSession, CheckoutSessionBillingAddressCollection,
+    CheckoutSessionMode, CreateBillingPortalSession, CreateCheckoutSession,
+    CreateCheckoutSessionAutomaticTax, CreateCheckoutSessionCustomerUpdate,
     CreateCheckoutSessionCustomerUpdateAddress, CreateCheckoutSessionLineItems, CustomerId,
 };
 
@@ -10,14 +12,22 @@ use crate::models::user::User;
 
 #[derive(Clone)]
 pub struct Stripe {
+    db: SqlitePool,
     client: stripe::Client,
+    website_url: String,
 }
 
 impl Stripe {
-    pub fn new() -> Self {
+    pub fn new(db: &SqlitePool) -> Self {
         let secret_key = env::var("STRIPE_SECRET").expect("STRIPE_SECRET must be set");
         let client = stripe::Client::new(secret_key);
-        Stripe { client }
+        let website_url = env::var("WEBSITE_URL").expect("WEBSITE_URL must be set");
+
+        Stripe {
+            client,
+            website_url,
+            db: db.clone(),
+        }
     }
 
     /**
@@ -45,7 +55,16 @@ impl Stripe {
         .await
         .map_err(|e| e.to_string())?;
 
-        // TODO(Marcello): I need to update the stripe_customer_id in the database.
+        let customer_id = customer.id.to_string();
+
+        sqlx::query!(
+            r#"UPDATE users SET stripe_customer_id = ? WHERE id = ?"#,
+            customer_id,
+            user.id
+        )
+        .execute(&self.db)
+        .await
+        .map_err(|e| e.to_string())?;
 
         Ok(customer.id)
     }
@@ -53,15 +72,14 @@ impl Stripe {
     pub async fn checkout(&self, user: &User, price_id: &str) -> Result<CheckoutSession, String> {
         let customer_id = self.create_customer(user).await?;
 
-        let website_url = env::var("WEBSITE_URL").expect("WEBSITE_URL must be set");
-        let success_url = format!("{website_url}/checkout/success");
-        let cancel_url = format!("{website_url}/checkout/cancelled");
+        let success_url = format!("{}/checkout/success", self.website_url);
+        let cancel_url = format!("{}/checkout/cancelled", self.website_url);
 
         let checkout_session = {
             let mut params = CreateCheckoutSession::new();
             params.cancel_url = Some(&cancel_url);
             params.success_url = Some(&success_url);
-            params.customer = Some(CustomerId::from(customer_id));
+            params.customer = Some(customer_id);
             params.mode = Some(CheckoutSessionMode::Subscription);
             params.line_items = Some(vec![CreateCheckoutSessionLineItems {
                 quantity: Some(1),
@@ -84,5 +102,17 @@ impl Stripe {
         };
 
         Ok(checkout_session)
+    }
+
+    pub async fn manage_subscription(&self, user: &User) -> Result<BillingPortalSession, String> {
+        let customer_id = self.create_customer(user).await?;
+        let return_url = format!("{}/subscriptions", self.website_url);
+
+        let mut params = CreateBillingPortalSession::new(customer_id);
+        params.return_url = Some(&return_url);
+
+        BillingPortalSession::create(&self.client, params)
+            .await
+            .map_err(|e| e.to_string())
     }
 }

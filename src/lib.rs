@@ -45,7 +45,7 @@ pub async fn start() {
 
 async fn initialize_app() -> Router {
     let db = Database::initialize().await;
-    let stripe = Stripe::new();
+    let stripe = Stripe::new(&db);
     let is_dev_mode = cfg!(debug_assertions);
     let app_details = AppDetails {
         name: env::var("APP_NAME")
