@@ -5,7 +5,10 @@ use askama_web::WebTemplate;
 use axum::{Router, extract::State, response::Redirect, routing::get};
 
 use crate::{
-    AppState, extractors::maybe_current_user::MaybeCurrentUser, handlers::SharedTemplateContext,
+    AppState,
+    extractors::maybe_current_user::MaybeCurrentUser,
+    handlers::SharedTemplateContext,
+    infrastructure::audit::ip_address::{self, CountryDetails},
 };
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -19,6 +22,7 @@ pub fn routes() -> Router<Arc<AppState>> {
 #[template(path = "index.html")]
 struct HomepageTemplate {
     shared: SharedTemplateContext,
+    country: CountryDetails,
 }
 
 async fn homepage(
@@ -27,6 +31,7 @@ async fn homepage(
 ) -> HomepageTemplate {
     HomepageTemplate {
         shared: SharedTemplateContext::new(&state, current_user),
+        country: ip_address::get_country_details().unwrap(),
     }
 }
 

@@ -23,3 +23,4 @@ target
 *.db
 node_modules/*
 public/styles/main-0.min.css
+ip_db.BIN

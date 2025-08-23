@@ -21,6 +21,7 @@ We offer some opinionated set up with `axum-template` including the following "t
 - SQLX
 - Docker
 - Stripe (for payments)
+- ip2location (for ip auditing / banning)
 - Askama (for templates)
 - OAuth
   - Google
@@ -69,11 +70,22 @@ With that in mind, you can also use similar steps from that script to get to wor
 on setting up your own pipelines for CI/CD.
 
 ### Deploying to DigitalOcean through GHA
+
 You can enable GHA, and use the existing do_deploy.yml which will also
 take care of cache-busting through a very rudimentary way (using the `RUN_ID`).
 
 You will need to set up the environment variables in your GitHub Repository:
 `DO_USERNAME`, `DO_IP_ADDR`, `DO_SSH_KEY`. This will build the image,
-put it on your server (droplet) under the `~/APP_NAME` directory and 
+put it on your server (droplet) under the `~/APP_NAME` directory and
 run the container on that droplet.
 
+## IP Address Auditing
+
+You can download the ip2location data from [https://lite.ip2location.com/database/db1-ip-country](https://lite.ip2location.com/database/db1-ip-country).
+
+You will need to add an attrition to your website:
+
+```html
+[Your site name or product name] uses the IP2Location LITE database for
+<a href="https://lite.ip2location.com" target="_blank">IP geolocation</a>.
+```
