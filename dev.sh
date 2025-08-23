@@ -8,6 +8,7 @@ DATABASE_URL="sqlite://database.db"
 JWT_SECRET="SOMETHING-TOP-SECRET"
 GOOGLE_CLIENT_ID="ADD_YOUR_CLIENT_ID"
 GOOGLE_CLIENT_SECRET="ADD_YOUR_SECRET"
+GOOGLE_CALLBACK_URL="http://localhost:8080/auth/google/callback"
 EOF
     echo ".env generated."
 else
