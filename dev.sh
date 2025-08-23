@@ -25,4 +25,4 @@ fi
 
 
 # Run cargo and TailwindCSS in watch mode
-npx concurrently "cargo watch -x run" "npx tailwindcss -i './public/styles/tailwind.css' -o './public/styles/main.css' --watch"
+npx concurrently "cargo watch -x run" "npx tailwindcss -i './public/styles/tailwind.css' -o './public/styles/main-0.min.css' --watch"

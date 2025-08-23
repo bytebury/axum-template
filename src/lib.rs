@@ -3,7 +3,7 @@ use axum::{
     http::{HeaderValue, header::CACHE_CONTROL},
 };
 use sqlx::SqlitePool;
-use std::sync::Arc;
+use std::{env, sync::Arc};
 use tower_http::{services::ServeDir, set_header::SetResponseHeaderLayer};
 
 use crate::{
@@ -32,7 +32,12 @@ pub struct AppState {
 
 pub async fn start() {
     let app = initialize_app().await;
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    let port = env::var("APP_PORT")
+        .unwrap_or("8080".to_string())
+        .to_string();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
+        .await
+        .unwrap();
 
     axum::serve(listener, app).await.unwrap();
 }
@@ -40,10 +45,13 @@ pub async fn start() {
 async fn initialize_app() -> Router {
     let db = Database::initialize().await;
     let is_dev_mode = cfg!(debug_assertions);
+    let version = "0".to_string();
     let app_details = AppDetails {
-        name: "axum-template".to_string(),
-        display_name: "Axum Template".to_string(),
-        version: env!("CARGO_PKG_VERSION").to_string(),
+        name: env::var("APP_NAME")
+            .unwrap_or("axum-template".to_string())
+            .to_string(),
+        display_name: env::var("APP_DISPLAY_NAME").unwrap_or_default().to_string(),
+        version: env::var("APP_VERSION").unwrap_or(version).to_string(),
     };
 
     let state = Arc::new(AppState {

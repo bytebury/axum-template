@@ -47,11 +47,14 @@ to see the application up and running.
 
 ## Customizing the Template
 
-If you are looking to customize the template, e.g. change the name from
-"Axum Template" to something reasonable, you can do that in the code itself.
+Most things are done through environment variables, including:
 
-Application Details are all configured in the `lib.rs#initialize_app` function.
-You may change them to your liking.
+```env
+APP_NAME="your-app-name"
+APP_DISPLAY_NAME="Your App Name"
+APP_VERSION="123"
+APP_PORT="8080"
+```
 
 ## Deploying
 
@@ -63,3 +66,13 @@ If you have a server, you can deploy using:
 
 With that in mind, you can also use similar steps from that script to get to work
 on setting up your own pipelines for CI/CD.
+
+### Deploying to DigitalOcean through GHA
+You can enable GHA, and use the existing do_deploy.yml which will also
+take care of cache-busting through a very rudimentary way (using the `RUN_ID`).
+
+You will need to set up the environment variables in your GitHub Repository:
+`DO_USERNAME`, `DO_IP_ADDR`, `DO_SSH_KEY`. This will build the image,
+put it on your server (droplet) under the `~/APP_NAME` directory and 
+run the container on that droplet.
+
