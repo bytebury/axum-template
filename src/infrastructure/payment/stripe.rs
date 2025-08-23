@@ -69,6 +69,9 @@ impl Stripe {
         Ok(customer.id)
     }
 
+    /**
+     * Create a checkout session and bring the user to Stripe to checkout.
+     */
     pub async fn checkout(&self, user: &User, price_id: &str) -> Result<CheckoutSession, String> {
         let customer_id = self.create_customer(user).await?;
 
@@ -104,6 +107,10 @@ impl Stripe {
         Ok(checkout_session)
     }
 
+    /**
+     * Create a billing portal session, which will allow a user to
+     * manage their subscriptions within Stripe.
+     */
     pub async fn manage_subscription(&self, user: &User) -> Result<BillingPortalSession, String> {
         let customer_id = self.create_customer(user).await?;
         let return_url = format!("{}/subscriptions", self.website_url);
