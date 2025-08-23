@@ -1,3 +1,4 @@
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
 use crate::{infrastructure::auth::google::GoogleUser, models::Entity};
@@ -11,15 +12,15 @@ pub struct User {
     pub last_name: Option<String>,
     pub full_name: String,
     pub picture_url: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
     pub stripe_customer_id: Option<String>,
 }
 
 impl From<GoogleUser> for User {
     fn from(google_user: GoogleUser) -> Self {
         User {
-            id: 1,
+            id: 0,
             email: google_user.email,
             verified: google_user.email_verified,
             first_name: google_user.given_name.unwrap_or(google_user.name.clone()),
@@ -27,8 +28,8 @@ impl From<GoogleUser> for User {
             full_name: google_user.name,
             picture_url: google_user.picture,
             stripe_customer_id: None,
-            created_at: "".to_string(),
-            updated_at: "".to_string(),
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: chrono::Utc::now().naive_utc(),
         }
     }
 }
