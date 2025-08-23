@@ -83,6 +83,9 @@ run the container on that droplet.
 
 You can download the ip2location data from [https://lite.ip2location.com/database/db1-ip-country](https://lite.ip2location.com/database/db1-ip-country).
 
+Once you download that, you will need to save it as `ip_db.BIN` in the root
+directory of this project.
+
 You will need to add an attrition to your website:
 
 ```html
