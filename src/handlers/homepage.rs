@@ -33,23 +33,22 @@ async fn buy_subscription(
     State(state): State<Arc<AppState>>,
     MaybeCurrentUser(current_user): MaybeCurrentUser,
 ) -> Result<Redirect, (axum::http::StatusCode, String)> {
-    if let Some(user) = current_user {
-        let price_id = env::var("STRIPE_PRICE_ID").expect("STRIPE_PRICE_ID must be set");
+    let user = match current_user {
+        Some(u) => u,
+        None => return Ok(Redirect::to("/")),
+    };
 
-        match state.stripe.checkout(&user, &price_id).await {
-            Ok(session) => {
-                let url = session.url.ok_or((
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                    "Missing checkout URL".to_string(),
-                ))?;
-                Ok(Redirect::to(&url))
-            }
-            Err(err) => Err((
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                err.to_string(),
-            )),
-        }
-    } else {
-        Ok(Redirect::to("/"))
-    }
+    let price_id = env::var("STRIPE_PRICE_ID").expect("STRIPE_PRICE_ID must be set");
+    let session = state
+        .stripe
+        .checkout(&user, &price_id)
+        .await
+        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let url = session.url.ok_or((
+        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+        "Missing checkout URL".to_string(),
+    ))?;
+
+    Ok(Redirect::to(&url))
 }
